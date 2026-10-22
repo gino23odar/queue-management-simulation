@@ -56,3 +56,53 @@ def test_multiple_servers():
         (1, 0),
         (2, 2),
     ]
+
+def test_shortest_processing_time():
+
+    customers = [
+        Customer(0, 0, 8),
+        Customer(1, 0, 2),
+        Customer(2, 0, 4),
+    ]
+
+    records = simulate(
+        customers,
+        strategy="spt",
+    )
+
+    assert [
+        r.customer_id for r in records
+    ] == [1, 2, 0]
+
+
+def test_priority_scheduling():
+
+    customers = [
+        Customer(0, 0, 8, 1),
+        Customer(1, 0, 2, 1),
+        Customer(2, 0, 4, 0),
+    ]
+
+    records = simulate(
+        customers,
+        strategy="priority",
+    )
+
+    assert [
+        r.customer_id for r in records
+    ] == [2, 0, 1]
+
+
+def test_priority_does_not_interrupt_service():
+
+    customers = [
+        Customer(0, 0, 8, 1),
+        Customer(1, 1, 1, 0),
+    ]
+
+    records = simulate(
+        customers,
+        strategy="priority",
+    )
+
+    assert records[1].start == 8

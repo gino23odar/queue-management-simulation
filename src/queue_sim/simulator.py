@@ -3,6 +3,32 @@ from math import inf
 
 from .models import Customer, ServiceRecord
 
+STRATEGIES = ("fcfs", "spt", "priority")
+
+
+def _selection_key(
+    customer: Customer,
+    strategy: str,
+) -> tuple:
+
+    if strategy == "fcfs":
+        return (
+            customer.arrival,
+            customer.id,
+        )
+
+    if strategy == "spt":
+        return (
+            customer.duration,
+            customer.arrival,
+            customer.id,
+        )
+
+    return (
+        customer.priority,
+        customer.arrival,
+        customer.id,
+    )
 
 def simulate(
     customers: list[Customer],
@@ -10,8 +36,10 @@ def simulate(
     servers: int = 1,
 ) -> list[ServiceRecord]:
 
-    if strategy != "fcfs":
-        raise ValueError("Only FCFS is supported")
+    if strategy not in STRATEGIES:
+        raise ValueError(
+            f"Unknown strategy: {strategy}"
+        )
 
     if servers < 1:
         raise ValueError(
@@ -88,7 +116,17 @@ def simulate(
                 free_servers
             )
 
-            customer = waiting.pop(0)
+            selected_index = min(
+                range(len(waiting)),
+                key=lambda i: _selection_key(
+                    waiting[i],
+                    strategy,
+                ),
+            )
+
+            customer = waiting.pop(
+                selected_index
+            )
 
             end = now + customer.duration
 
