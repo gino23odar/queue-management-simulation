@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "queue-management-simulation"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["matplotlib>=3.8"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
