@@ -156,3 +156,31 @@ def test_metrics_respect_closing_time():
     assert metrics.utilization_during_hours == (
         pytest.approx(1 / 480)
     )
+
+def test_priority_changes_service_order():
+
+    customers = [
+        Customer(0, 0, 10, 1),
+        Customer(1, 1, 5, 1),
+        Customer(2, 2, 1, 0),
+    ]
+
+    fcfs = simulate(
+        customers,
+        strategy="fcfs",
+        servers=1,
+    )
+
+    priority = simulate(
+        customers,
+        strategy="priority",
+        servers=1,
+    )
+
+    assert [r.customer_id for r in fcfs] == [
+        0, 1, 2
+    ]
+
+    assert [r.customer_id for r in priority] == [
+        0, 2, 1
+    ]
