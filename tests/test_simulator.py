@@ -2,6 +2,7 @@ import pytest
 
 from src.queue_sim.models import Customer
 from src.queue_sim.simulator import simulate
+from src.queue_sim.generator import generate_customers
 
 
 def test_fcfs_order_and_waits():
@@ -106,3 +107,32 @@ def test_priority_does_not_interrupt_service():
     )
 
     assert records[1].start == 8
+
+def test_customer_generation_is_reproducible():
+
+    first = generate_customers(
+        count=100,
+        seed=42,
+    )
+
+    second = generate_customers(
+        count=100,
+        seed=42,
+    )
+
+    assert first == second
+
+
+def test_different_seeds_generate_different_data():
+
+    first = generate_customers(
+        count=100,
+        seed=42,
+    )
+
+    second = generate_customers(
+        count=100,
+        seed=43,
+    )
+
+    assert first != second
