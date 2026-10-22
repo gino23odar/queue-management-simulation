@@ -35,11 +35,24 @@ def test_idle_server():
     assert records[0].wait == 0
 
 
-def test_multiple_servers_not_supported():
+def test_multiple_servers():
 
     customers = [
-        Customer(0, 0, 5),
+        Customer(0, 0, 8),
+        Customer(1, 0, 2),
+        Customer(2, 0, 4),
     ]
 
-    with pytest.raises(ValueError):
-        simulate(customers, servers=2)
+    records = simulate(
+        customers,
+        servers=2,
+    )
+
+    assert [
+        (r.customer_id, r.start)
+        for r in records
+    ] == [
+        (0, 0),
+        (1, 0),
+        (2, 2),
+    ]

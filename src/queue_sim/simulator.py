@@ -1,3 +1,6 @@
+import heapq
+from math import inf
+
 from .models import Customer, ServiceRecord
 
 
@@ -10,40 +13,106 @@ def simulate(
     if strategy != "fcfs":
         raise ValueError("Only FCFS is supported")
 
-    if servers != 1:
-        raise ValueError("Only one server is supported")
+    if servers < 1:
+        raise ValueError(
+            "At least one server is required"
+        )
 
     if len({c.id for c in customers}) != len(customers):
-        raise ValueError("Customer IDs must be unique")
-
-    current_time = 0.0
-    records = []
+        raise ValueError(
+            "Customer IDs must be unique"
+        )
 
     arrivals = sorted(
         customers,
         key=lambda c: (c.arrival, c.id),
     )
 
-    for customer in arrivals:
+    free_servers = list(range(servers))
+    heapq.heapify(free_servers)
 
-        start = max(
-            current_time,
-            customer.arrival,
+    # (completion_time, server_id)
+    ongoing = []
+
+    waiting = []
+    records = []
+    next_customer = 0
+
+    while (
+        next_customer < len(arrivals)
+        or ongoing
+        or waiting
+    ):
+
+        next_arrival = (
+            arrivals[next_customer].arrival
+            if next_customer < len(arrivals)
+            else inf
         )
 
-        end = start + customer.duration
+        next_completion = (
+            ongoing[0][0]
+            if ongoing
+            else inf
+        )
 
-        records.append(
-            ServiceRecord(
-                customer_id=customer.id,
-                server_id=0,
-                arrival=customer.arrival,
-                start=start,
-                end=end,
-                priority=customer.priority,
+        now = min(
+            next_arrival,
+            next_completion,
+        )
+
+        # Release employees who finished service.
+        while ongoing and ongoing[0][0] <= now:
+
+            _, server_id = heapq.heappop(ongoing)
+
+            heapq.heappush(
+                free_servers,
+                server_id,
             )
-        )
 
-        current_time = end
+        # Register new arrivals.
+        while (
+            next_customer < len(arrivals)
+            and arrivals[next_customer].arrival <= now
+        ):
 
-    return records
+            customer = arrivals[next_customer]
+            waiting.append(customer)
+            next_customer += 1
+
+        # Assign waiting customers to free servers.
+        while free_servers and waiting:
+
+            server_id = heapq.heappop(
+                free_servers
+            )
+
+            customer = waiting.pop(0)
+
+            end = now + customer.duration
+
+            records.append(
+                ServiceRecord(
+                    customer_id=customer.id,
+                    server_id=server_id,
+                    arrival=customer.arrival,
+                    start=now,
+                    end=end,
+                    priority=customer.priority,
+                )
+            )
+
+            heapq.heappush(
+                ongoing,
+                (end, server_id),
+            )
+
+    return sorted(
+        records,
+        key=lambda r: (
+            r.start,
+            r.server_id,
+            r.customer_id,
+        ),
+    )
