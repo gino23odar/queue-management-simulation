@@ -3,6 +3,7 @@ import pytest
 from src.queue_sim.models import Customer
 from src.queue_sim.simulator import simulate
 from src.queue_sim.generator import generate_customers
+from src.queue_sim.metrics import calculate_metrics
 
 
 def test_fcfs_order_and_waits():
@@ -136,3 +137,22 @@ def test_different_seeds_generate_different_data():
     )
 
     assert first != second
+
+def test_metrics_respect_closing_time():
+
+    customers = [
+        Customer(0, 479, 4),
+    ]
+
+    records = simulate(customers)
+
+    metrics = calculate_metrics(
+        records,
+        servers=1,
+    )
+
+    assert metrics.completed_before_close == 0
+
+    assert metrics.utilization_during_hours == (
+        pytest.approx(1 / 480)
+    )
