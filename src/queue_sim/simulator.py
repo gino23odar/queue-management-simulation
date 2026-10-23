@@ -3,6 +3,7 @@ from math import inf
 
 from .models import Customer, ServiceRecord
 
+
 STRATEGIES = ("fcfs", "spt", "priority")
 
 
@@ -30,9 +31,10 @@ def _selection_key(
         customer.id,
     )
 
+
 def simulate(
     customers: list[Customer],
-    strategy: str = "fcfs", # first-come first-served
+    strategy: str = "fcfs",
     servers: int = 1,
 ) -> list[ServiceRecord]:
 
@@ -56,13 +58,18 @@ def simulate(
         key=lambda c: (c.arrival, c.id),
     )
 
+    # available employees
     free_servers = list(range(servers))
     heapq.heapify(free_servers)
 
+    # active jobs:
     # (completion_time, server_id)
     ongoing = []
 
+    # waiting queue:
+    # (selection_key, customer_id, customer)
     waiting = []
+
     records = []
     next_customer = 0
 
@@ -89,43 +96,49 @@ def simulate(
             next_completion,
         )
 
-        # Release employees who finished service.
+        # release servers finishing at this event time
         while ongoing and ongoing[0][0] <= now:
 
-            _, server_id = heapq.heappop(ongoing)
+            _, server_id = heapq.heappop(
+                ongoing
+            )
 
             heapq.heappush(
                 free_servers,
                 server_id,
             )
 
-        # Register new arrivals.
+        # add customers arriving at this event time
         while (
             next_customer < len(arrivals)
             and arrivals[next_customer].arrival <= now
         ):
 
             customer = arrivals[next_customer]
-            waiting.append(customer)
+
+            heapq.heappush(
+                waiting,
+                (
+                    _selection_key(
+                        customer,
+                        strategy,
+                    ),
+                    customer.id,
+                    customer,
+                ),
+            )
+
             next_customer += 1
 
-        # Assign waiting customers to free servers.
+        # dispatch jobs using heap-selection
         while free_servers and waiting:
 
             server_id = heapq.heappop(
                 free_servers
             )
 
-            selected_index = min(
-                range(len(waiting)),
-                key=lambda i: _selection_key(
-                    waiting[i],
-                    strategy,
-                ),
-            )
-
-            customer = waiting.pop(
-                selected_index
+            _, _, customer = heapq.heappop(
+                waiting
             )
 
             end = now + customer.duration

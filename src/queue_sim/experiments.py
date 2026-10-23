@@ -14,6 +14,16 @@ from .simulator import STRATEGIES, simulate
 LOADS = (100, 300, 500)
 SERVER_COUNTS = (1, 2, 4)
 
+def optional_mean(values):
+
+    valid = [
+        value
+        for value in values
+        if value is not None
+    ]
+
+    return mean(valid) if valid else None
+
 
 def run_experiments(
     repetitions: int = 30,
@@ -69,7 +79,7 @@ def run_experiments(
                         **asdict(metrics),
                     })
 
-    # Export individual simulation results.
+    # export individual simulation results
     raw_path = output / "experiments.csv"
 
     with raw_path.open(
@@ -86,7 +96,7 @@ def run_experiments(
         writer.writeheader()
         writer.writerows(rows)
 
-    # Group results by experimental configuration.
+    # group results by experimental configuration
     grouped = defaultdict(list)
 
     for row in rows:
@@ -143,9 +153,24 @@ def run_experiments(
                 row["utilization_during_hours"]
                 for row in data
             ),
+
+            "high_priority_mean_wait": optional_mean(
+                row["high_priority_mean_wait"]
+                for row in data
+            ),
+
+            "regular_priority_mean_wait": optional_mean(
+                row["regular_priority_mean_wait"]
+                for row in data
+            ),
+
+            "priority_wait_gap": optional_mean(
+                row["priority_wait_gap"]
+                for row in data
+            ),
         })
 
-    # Export aggregated results.
+    # export aggregated results
     summary_path = output / "summary.csv"
 
     with summary_path.open(

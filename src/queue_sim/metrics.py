@@ -13,6 +13,10 @@ class Metrics:
     completed_before_close: int
     utilization_during_hours: float
 
+    high_priority_mean_wait: float | None
+    regular_priority_mean_wait: float | None
+    priority_wait_gap: float | None
+
 
 def calculate_metrics(
     records: list[ServiceRecord],
@@ -32,44 +36,74 @@ def calculate_metrics(
             p95_wait=0,
             completed_before_close=0,
             utilization_during_hours=0,
+            high_priority_mean_wait=None,
+            regular_priority_mean_wait=None,
+            priority_wait_gap=None,
         )
 
     waits = sorted(
-        record.wait
-        for record in records
+        r.wait for r in records
     )
 
-    average_wait = mean(waits)
-    maximum_wait = max(waits)
+    high_waits = [
+        r.wait
+        for r in records
+        if r.priority == 0
+    ]
 
-    percentile_index = (
-        ceil(0.95 * len(waits)) - 1
+    regular_waits = [
+        r.wait
+        for r in records
+        if r.priority == 1
+    ]
+
+    high_mean = (
+        mean(high_waits)
+        if high_waits
+        else None
     )
 
-    p95_wait = waits[percentile_index]
+    regular_mean = (
+        mean(regular_waits)
+        if regular_waits
+        else None
+    )
 
-    completed = sum(
-        record.end <= day_minutes
-        for record in records
+    gap = (
+        regular_mean - high_mean
+        if high_mean is not None
+        and regular_mean is not None
+        else None
     )
 
     busy_minutes = sum(
         max(
             0.0,
-            min(record.end, day_minutes)
-            - max(record.start, 0.0),
+            min(r.end, day_minutes)
+            - max(r.start, 0.0),
         )
-        for record in records
-    )
-
-    utilization = (
-        busy_minutes / (servers * day_minutes)
+        for r in records
     )
 
     return Metrics(
-        mean_wait=average_wait,
-        max_wait=maximum_wait,
-        p95_wait=p95_wait,
-        completed_before_close=completed,
-        utilization_during_hours=utilization,
+        mean_wait=mean(waits),
+
+        max_wait=max(waits),
+
+        p95_wait=waits[
+            ceil(0.95 * len(waits)) - 1
+        ],
+
+        completed_before_close=sum(
+            r.end <= day_minutes
+            for r in records
+        ),
+
+        utilization_during_hours=(
+            busy_minutes / (servers * day_minutes)
+        ),
+
+        high_priority_mean_wait=high_mean,
+        regular_priority_mean_wait=regular_mean,
+        priority_wait_gap=gap,
     )
