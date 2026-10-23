@@ -184,3 +184,27 @@ def test_priority_changes_service_order():
     assert [r.customer_id for r in priority] == [
         0, 2, 1
     ]
+
+def test_fairness_gap():
+
+    customers = [
+        Customer(0, 0, 5, 0),
+        Customer(1, 0, 5, 1),
+        Customer(2, 0, 5, 1),
+    ]
+
+    records = simulate(
+        customers,
+        strategy="priority",
+    )
+
+    metrics = calculate_metrics(
+        records,
+        servers=1,
+    )
+
+    assert metrics.high_priority_mean_wait == 0
+
+    assert metrics.regular_priority_mean_wait == 7.5
+
+    assert metrics.priority_wait_gap == 7.5
