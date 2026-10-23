@@ -208,3 +208,54 @@ def test_fairness_gap():
     assert metrics.regular_priority_mean_wait == 7.5
 
     assert metrics.priority_wait_gap == 7.5
+
+def test_empty_queue():
+
+    assert simulate([]) == []
+
+    metrics = calculate_metrics(
+        [],
+        servers=1,
+    )
+
+    assert metrics.mean_wait == 0
+
+
+@pytest.mark.parametrize(
+    "strategy",
+    ["fcfs", "spt", "priority"],
+)
+def test_customers_served_exactly_once(strategy):
+
+    customers = generate_customers(
+        count=30,
+        seed=4,
+    )
+
+    records = simulate(
+        customers,
+        strategy=strategy,
+        servers=3,
+    )
+
+    assert sorted(
+        r.customer_id
+        for r in records
+    ) == list(range(30))
+
+    assert all(
+        r.start >= r.arrival
+        and r.end > r.start
+        for r in records
+    )
+
+
+def test_duplicate_customer_ids_rejected():
+
+    customers = [
+        Customer(1, 0, 2),
+        Customer(1, 1, 4),
+    ]
+
+    with pytest.raises(ValueError):
+        simulate(customers)
