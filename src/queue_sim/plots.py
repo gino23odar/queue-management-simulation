@@ -4,10 +4,10 @@ import csv
 from pathlib import Path
 
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt
 
 from .simulator import STRATEGIES
 
