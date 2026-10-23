@@ -79,7 +79,7 @@ def run_experiments(
                         **asdict(metrics),
                     })
 
-    # Export individual simulation results.
+    # export individual simulation results
     raw_path = output / "experiments.csv"
 
     with raw_path.open(
@@ -96,7 +96,7 @@ def run_experiments(
         writer.writeheader()
         writer.writerows(rows)
 
-    # Group results by experimental configuration.
+    # group results by experimental configuration
     grouped = defaultdict(list)
 
     for row in rows:
@@ -170,7 +170,7 @@ def run_experiments(
             ),
         })
 
-    # Export aggregated results.
+    # export aggregated results
     summary_path = output / "summary.csv"
 
     with summary_path.open(

@@ -58,15 +58,15 @@ def simulate(
         key=lambda c: (c.arrival, c.id),
     )
 
-    # Available employees.
+    # available employees
     free_servers = list(range(servers))
     heapq.heapify(free_servers)
 
-    # Active jobs:
+    # active jobs:
     # (completion_time, server_id)
     ongoing = []
 
-    # Waiting queue:
+    # waiting queue:
     # (selection_key, customer_id, customer)
     waiting = []
 
@@ -96,7 +96,7 @@ def simulate(
             next_completion,
         )
 
-        # Release servers finishing at this event time.
+        # release servers finishing at this event time
         while ongoing and ongoing[0][0] <= now:
 
             _, server_id = heapq.heappop(
@@ -108,7 +108,7 @@ def simulate(
                 server_id,
             )
 
-        # Add customers arriving at this event time.
+        # add customers arriving at this event time
         while (
             next_customer < len(arrivals)
             and arrivals[next_customer].arrival <= now
@@ -130,7 +130,7 @@ def simulate(
 
             next_customer += 1
 
-        # Dispatch jobs using heap-based selection.
+        # dispatch jobs using heap-selection
         while free_servers and waiting:
 
             server_id = heapq.heappop(
