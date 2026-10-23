@@ -14,6 +14,16 @@ from .simulator import STRATEGIES, simulate
 LOADS = (100, 300, 500)
 SERVER_COUNTS = (1, 2, 4)
 
+def optional_mean(values):
+
+    valid = [
+        value
+        for value in values
+        if value is not None
+    ]
+
+    return mean(valid) if valid else None
+
 
 def run_experiments(
     repetitions: int = 30,
@@ -141,6 +151,21 @@ def run_experiments(
 
             "utilization_during_hours": mean(
                 row["utilization_during_hours"]
+                for row in data
+            ),
+
+            "high_priority_mean_wait": optional_mean(
+                row["high_priority_mean_wait"]
+                for row in data
+            ),
+
+            "regular_priority_mean_wait": optional_mean(
+                row["regular_priority_mean_wait"]
+                for row in data
+            ),
+
+            "priority_wait_gap": optional_mean(
+                row["priority_wait_gap"]
                 for row in data
             ),
         })
